@@ -316,7 +316,7 @@
 </head>
 <body>
 
-    <!-- Blackout Overlay Layer -->
+    <!-- Blackout thingy  -->
     <div id="blackout"></div>
 
     <img id="clippy-img" src="clippy.gif" alt="Clippy" style="position: fixed; top: 10px; left: 10px; z-index: 1; width: 100px; height: auto; pointer-events: none; display: none;">
@@ -413,11 +413,11 @@
     </div>
 
     <script>
-        // --- CUSTOMIZE TIMINGS HERE (in milliseconds) ---
-        const BLACKOUT_TIME = 5200;    // blackout (e.g., 4000ms = 0:04)
-        const HOLD_DURATION = 550;     // hold (how long it stays fully black)
-        const FADE_OUT_DURATION = 0; // fade out (fade out transition time)
-        // ----------------------------------------------
+
+        const BLACKOUT_TIME = 5200;    
+        const HOLD_DURATION = 550;     
+        const FADE_OUT_DURATION = 0; 
+
 
         let hasEntered = false;
 
