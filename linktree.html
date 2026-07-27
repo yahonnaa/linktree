@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>newspaper.nn - bio</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            background-color: #008080;
+            font-family: 'MS Sans Serif', Tahoma, sans-serif;
+            overflow: hidden;
+            color: #000;
+        }
+        
+        #enter-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            z-index: 9999; cursor: pointer; font-size: 20px;
+            font-family: monospace; letter-spacing: 2px;
+            transition: opacity 0.8s ease-out;
+            opacity: 1;
+        }
+
+        /* Customizable Blackout Overlay Effect */
+        #blackout {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000000;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 99999;
+            transition: none;
+        }
+
+        #blackout.active {
+            opacity: 1;
+            transition: opacity var(--fade-out-duration, 500ms) ease-in-out;
+        }
+
+        .window {
+            width: 560px;
+            aspect-ratio: 16 / 9; 
+            background: #c0c0c0;
+            border: 2px solid;
+            border-color: #fff #808080 #808080 #fff;
+            position: absolute;
+            top: calc(50% - 157px); left: calc(50% - 280px);
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+            display: none; 
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .window.maximized {
+            top: 0 !important; left: 0 !important;
+            width: 100% !important; height: calc(100% - 32px) !important; 
+            aspect-ratio: auto;
+        }
+
+        .title-bar {
+            background: #000080;
+            color: #fff;
+            padding: 4px 6px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            letter-spacing: 1px;
+            cursor: grab;
+            user-select: none;
+        }
+        
+        .title-bar:active {
+            cursor: grabbing;
+        }
+
+        .title-bar-buttons {
+            display: flex; gap: 2px;
+        }
+
+        .win-btn {
+            background: #c0c0c0; border: 2px solid;
+            border-color: #fff #808080 #808080 #fff;
+            width: 14px; height: 14px; cursor: pointer;
+            font-size: 10px; font-weight: bold;
+            display: flex; align-items: center; justify-content: center; color: black;
+        }
+        .win-btn:active {
+            border-color: #808080 #fff #fff #808080;
+        }
+
+        .menu-bar {
+            background: #c0c0c0;
+            display: flex;
+            padding: 2px 4px;
+            border-bottom: 1px solid #808080;
+            box-shadow: 0 1px 0 #fff;
+        }
+
+        .menu-item {
+            padding: 2px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .menu-item:hover {
+            background: #000080;
+            color: #fff;
+        }
+
+        .window-email {
+            position: absolute;
+            bottom: 4px;
+            left: 8px;
+            font-size: 11px;
+            color: #333;
+        }
+
+        .content {
+            padding: 20px; text-align: center;
+            overflow-y: auto; flex-grow: 1;
+        }
+
+        .avatar {
+            width: 90px; height: 90px;
+            background-color: #fff; border: 2px solid #808080;
+            margin: 0 auto 15px;
+            border-color: #808080 #fff #fff #808080;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .bio-name {
+            font-weight: bold; font-size: 18px; margin-bottom: 5px;
+        }
+
+        .socials {
+            display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px;
+        }
+
+        .win95-dialog-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.3);
+            display: none; align-items: center; justify-content: center;
+            z-index: 20000;
+        }
+
+        .win95-dialog {
+            width: 300px;
+            background: #c0c0c0;
+            border: 2px solid;
+            border-color: #fff #808080 #808080 #fff;
+            box-shadow: 2px 2px 6px rgba(0,0,0,0.5);
+        }
+
+        .dialog-title-bar {
+            background: #000080; color: #fff; padding: 4px 6px;
+            font-weight: bold; font-size: 12px; letter-spacing: 1px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .dialog-body {
+            display: flex; align-items: center; gap: 15px;
+            padding: 20px; text-align: left;
+        }
+
+        .dialog-icon {
+            font-size: 30px; flex-shrink: 0;
+        }
+
+        .dialog-text {
+            font-size: 12px; line-height: 1.4;
+        }
+
+        .dialog-footer {
+            display: flex; justify-content: center;
+            padding: 0 20px 15px;
+        }
+
+        .dialog-ok-btn {
+            background: #c0c0c0; border: 2px solid;
+            border-color: #fff #808080 #808080 #fff;
+            padding: 4px 24px; font-size: 12px; cursor: pointer;
+            font-family: 'MS Sans Serif', Tahoma, sans-serif;
+        }
+        .dialog-ok-btn:active {
+            border-color: #808080 #fff #fff #808080;
+        }
+
+        .social-btn {
+            background: #c0c0c0; border: 2px solid;
+            border-color: #fff #808080 #808080 #fff;
+            padding: 8px 16px; text-decoration: none; color: black;
+            font-size: 14px; font-family: 'MS Sans Serif', Tahoma, sans-serif;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; 
+        }
+        .social-btn:active {
+            border-color: #808080 #fff #fff #808080;
+            padding: 9px 15px 7px 17px;
+        }
+
+        .music-player {
+            margin-top: 20px; font-size: 11px; border-top: 1px solid #808080; padding-top: 10px;
+            color: #333;
+        }
+
+        .taskbar {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 32px;
+            background: #c0c0c0; border-top: 2px solid #fff;
+            display: none; align-items: center; padding: 0 4px; box-sizing: border-box;
+            z-index: 1000; box-shadow: 0 -1px 2px rgba(0,0,0,0.2);
+        }
+
+        .start-btn {
+            background: #c0c0c0; border: 2px solid;
+            border-color: #fff #808080 #808080 #fff;
+            padding: 2px 8px; font-weight: bold; cursor: pointer;
+            margin-right: 10px; height: 24px; display: flex; align-items: center; font-size: 12px;
+        }
+        .start-btn:active {
+            border-color: #808080 #fff #fff #808080;
+            padding: 3px 7px 1px 9px;
+        }
+
+        .task-item {
+            background: #c0c0c0; border: 2px solid;
+            border-color: #fff #808080 #808080 #fff;
+            padding: 2px 10px; cursor: pointer; font-size: 12px;
+            height: 24px; display: flex; align-items: center; font-weight: bold;
+            min-width: 100px;
+        }
+        .task-item:active, .task-item.active {
+            border-color: #808080 #fff #fff #808080;
+            background-color: #e0e0e0;
+        }
+
+        #worker-gif {
+            position: fixed;
+            bottom: 40px;
+            right: 12px;
+            width: 210px;
+            height: auto;
+            z-index: 1;
+            pointer-events: none;
+            display: none;
+        }
+
+        .volume-control {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            background: #c0c0c0;
+            border: 2px solid;
+            border-color: #fff #808080 #808080 #fff;
+            padding: 6px 12px;
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+        }
+
+        .volume-icon {
+            font-size: 14px;
+            width: 16px;
+            text-align: center;
+        }
+
+        #volume-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 120px;
+            height: 6px;
+            background: #808080;
+            border: 1px solid;
+            border-color: #404040 #fff #fff #404040;
+            outline: none;
+            cursor: pointer;
+        }
+
+        #volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 18px;
+            background: #c0c0c0;
+            border: 2px solid;
+            border-color: #fff #808080 #808080 #fff;
+            cursor: pointer;
+        }
+
+        #volume-slider::-moz-range-thumb {
+            width: 14px;
+            height: 18px;
+            background: #c0c0c0;
+            border: 2px solid;
+            border-color: #fff #808080 #808080 #fff;
+            cursor: pointer;
+            border-radius: 0;
+        }
+
+        #volume-slider::-moz-range-track {
+            background: #808080;
+            height: 6px;
+            border: 1px solid;
+            border-color: #404040 #fff #fff #404040;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Blackout Overlay Layer -->
+    <div id="blackout"></div>
+
+    <img id="clippy-img" src="clippy.gif" alt="Clippy" style="position: fixed; top: 10px; left: 10px; z-index: 1; width: 100px; height: auto; pointer-events: none; display: none;">
+
+    <img id="worker-gif" src="worker.gif" alt="worker">
+
+
+    <div id="enter-screen" onclick="startBio()">
+        [ click anywhere to enter ]
+    </div>
+
+    <!-- Make sure apartment.mp3 is in the same folder -->
+    <audio id="bgm" loop>
+        <source src="apartment.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="volume-control" id="volume-control">
+        <span class="volume-icon" id="volume-icon">🔊</span>
+        <input type="range" id="volume-slider" min="0" max="100" value="50" oninput="setVolume(this.value)">
+    </div>
+
+    <div class="window" id="main-window">
+        <div class="title-bar" id="title-bar">
+            <span>aboutme.exe</span>
+            <div class="title-bar-buttons">
+                <div class="win-btn" id="btn-min">_</div>
+                <div class="win-btn" id="btn-max">□</div>
+                <div class="win-btn" id="btn-close">X</div>
+            </div>
+        </div>
+
+        <div class="menu-bar">
+            <span class="menu-item" onclick="openDialog('about-dialog-overlay')">About</span>
+            <span class="menu-item" onclick="openDialog('help-dialog-overlay')">Help</span>
+        </div>
+        
+        <div class="content" id="window-content">
+            <div class="avatar" style="background-image: url('https://cdn.discordapp.com/attachments/1523983925959983186/1530950961110192211/download_1.jpg?ex=6a6770b0&is=6a661f30&hm=0804b17103f158d87dc6591c308d5c49446d696e4d030d661ce332f0fb73bbe8');"></div>
+            
+            <div class="bio-name">newspaper</div>
+            <div style="font-size: 13px;">just vibing on the internet · loves geometry dash · making bad decisions</div>
+            
+            <div class="socials">
+                <a class="social-btn" href="https://www.tiktok.com/@newspaper.n" target="_blank">TikTok</a>
+                <a class="social-btn" href="https://www.youtube.com/@prio123official" target="_blank">YouTube</a>
+                <button class="social-btn" onclick="copyDiscord()">Discord</button>
+                <a class="social-btn" href="https://www.instagram.com/deluxe9789/" target="_blank">Instagram</a>
+                <a class="social-btn" href="https://www.twitch.tv/deluxesssaaas" target="_blank">Twitch</a>
+            </div>
+
+            <div class="music-player">
+                 Now Playing: Blksmiith - SR20DET (on loop)
+            </div>
+        </div>
+
+        <div class="window-email">contact me: yehlofin@gmail.com</div>
+    </div>
+
+    <div class="win95-dialog-overlay" id="about-dialog-overlay">
+        <div class="win95-dialog">
+            <div class="dialog-title-bar">
+                <span>About</span>
+                <div class="win-btn" onclick="closeDialog('about-dialog-overlay')">X</div>
+            </div>
+            <div class="dialog-body">
+                <div class="dialog-icon">ℹ️</div>
+                <div class="dialog-text">this is already an about</div>
+            </div>
+            <div class="dialog-footer">
+                <button class="dialog-ok-btn" onclick="closeDialog('about-dialog-overlay')">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="win95-dialog-overlay" id="help-dialog-overlay">
+        <div class="win95-dialog">
+            <div class="dialog-title-bar">
+                <span>Error</span>
+                <div class="win-btn" onclick="closeDialog('help-dialog-overlay')">X</div>
+            </div>
+            <div class="dialog-body">
+                <div class="dialog-icon">❌</div>
+                <div class="dialog-text">Error 404.<br>I dont know</div>
+            </div>
+            <div class="dialog-footer">
+                <button class="dialog-ok-btn" onclick="closeDialog('help-dialog-overlay')">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="taskbar" id="taskbar">
+        <div class="start-btn">Start</div>
+        <div class="task-item active" id="taskbar-app">aboutme.exe</div>
+    </div>
+
+    <script>
+        // --- CUSTOMIZE TIMINGS HERE (in milliseconds) ---
+        const BLACKOUT_TIME = 5200;    // blackout (e.g., 4000ms = 0:04)
+        const HOLD_DURATION = 550;     // hold (how long it stays fully black)
+        const FADE_OUT_DURATION = 0; // fade out (fade out transition time)
+        // ----------------------------------------------
+
+        let hasEntered = false;
+
+        function syncGifWithWindow() {
+            document.getElementById('worker-gif').style.display = hasEntered ? 'block' : 'none';
+            document.getElementById('clippy-img').style.display = hasEntered ? 'block' : 'none';
+        }
+
+        function startBio() {
+            const enterScreen = document.getElementById('enter-screen');
+            const blackout = document.getElementById('blackout');
+            
+            blackout.style.setProperty('--fade-out-duration', FADE_OUT_DURATION + 'ms');
+
+            hasEntered = true;
+            document.getElementById('main-window').style.display = 'flex';
+            document.getElementById('taskbar').style.display = 'flex';
+            document.getElementById('volume-control').style.display = 'flex';
+            syncGifWithWindow();
+            
+            let audio = document.getElementById('bgm');
+            audio.volume = 0.5;
+            audio.play().catch(error => {
+                console.log("Audio playback error:", error);
+            });
+            
+            enterScreen.style.opacity = '0';
+            setTimeout(() => {
+                enterScreen.style.display = 'none';
+            }, 800);
+
+            // Trigger instant blackout at the configured timestamp
+            setTimeout(() => {
+                blackout.classList.add('active');
+                
+                // Wait for the hold duration, then start the fade out
+                setTimeout(() => {
+                    blackout.classList.remove('active');
+                }, HOLD_DURATION);
+
+            }, BLACKOUT_TIME);
+        }
+
+        function copyDiscord() {
+            navigator.clipboard.writeText("newspaper.nn");
+            alert("username copied to keyboard!");
+        }
+
+        function openDialog(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+
+        function closeDialog(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function setVolume(value) {
+            const vol = value / 100;
+            document.getElementById('bgm').volume = vol;
+
+            const icon = document.getElementById('volume-icon');
+            if (value == 0) {
+                icon.textContent = '🔇';
+            } else if (value < 50) {
+                icon.textContent = '🔉';
+            } else {
+                icon.textContent = '🔊';
+            }
+        }
+
+        // --- Dragging Logic ---
+        const titleBar = document.getElementById('title-bar');
+        const win = document.getElementById('main-window');
+        let isDragging = false, startX, startY, initialX, initialY;
+
+        titleBar.addEventListener('mousedown', (e) => {
+            if (e.target.classList.contains('win-btn')) return;
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            initialX = win.offsetLeft;
+            initialY = win.offsetTop;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging || win.classList.contains('maximized')) return; 
+            win.style.left = (initialX + e.clientX - startX) + 'px';
+            win.style.top = (initialY + e.clientY - startY) + 'px';
+        });
+
+        document.addEventListener('mouseup', () => { isDragging = false; });
+
+        // --- Window & Taskbar Logic ---
+        const content = document.getElementById('window-content');
+        const taskbarApp = document.getElementById('taskbar-app');
+
+        function toggleWindow() {
+            if (win.style.display === 'none') {
+                win.style.display = 'flex';
+                taskbarApp.classList.add('active');
+            } else {
+                win.style.display = 'none';
+                taskbarApp.classList.remove('active');
+            }
+            syncGifWithWindow();
+        }
+
+        taskbarApp.addEventListener('click', toggleWindow);
+
+        // Minimize button disabled — no longer functional
+
+        document.getElementById('btn-max').addEventListener('click', () => {
+            win.classList.toggle('maximized');
+            content.style.display = 'block'; 
+            syncGifWithWindow();
+        });
+
+        document.getElementById('btn-close').addEventListener('click', () => {
+            win.style.display = 'none';
+            taskbarApp.classList.remove('active');
+            syncGifWithWindow();
+        });
+    </script>
+</body>
+</html>
